@@ -8,19 +8,16 @@ albedo_texture = ExtResource( 2 )
 uv1_scale = Vector3( 20, 20, 20 )
 
 [sub_resource type="BoxShape" id=2]
-extents = Vector3( 41.2197, 0.001, 49.8829 )
+extents = Vector3( 250.245, 0.001, 248.306 )
 
 [node name="sceneRoot" type="Spatial"]
 
 [node name="car" parent="." instance=ExtResource( 1 )]
 
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 0.16472, 0, -0.98634, 0, 1, 0, 0.98634, 0, 0.16472, -6.2912, 0.644611, 1.39534 )
-
 [node name="CSGBox" type="CSGBox" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.65852, 0 )
-width = 100.0
-depth = 100.0
+width = 500.0
+depth = 500.0
 material = SubResource( 1 )
 
 [node name="StaticBody" type="StaticBody" parent="CSGBox"]
