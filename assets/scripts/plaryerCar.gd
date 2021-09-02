@@ -35,13 +35,23 @@ func get_speed_kph():
 	return current_speed_mps * 3600 / 1000.0
 
 
-func _process_gear_inputs():
-	if Input.is_action_just_pressed("gear_down") and current_gear > -1:
-		current_gear = current_gear - 1
-	elif Input.is_action_just_pressed("gear_up") and current_gear < gear_ratios.size():
-		current_gear = current_gear + 1
+func _process_gear_inputs(delta : float):
+	if gear_timer > 0.0:
+		gear_timer = max(0.0, gear_timer - delta)
+		clutch_position = 0.0
+	else:
+		if Input.is_action_just_pressed("gear_down") and current_gear > -1:
+			current_gear = current_gear - 1
+			gear_timer = gear_shift_time
+			clutch_position = 0.0
+		elif Input.is_action_just_pressed("gear_up") and current_gear < gear_ratios.size():
+			current_gear = current_gear + 1
+			gear_timer = gear_shift_time
+			clutch_position = 0.0
+		else:
+			clutch_position = 1.0
 
-func calculate_rpm():
+func calculate_rpm() -> float:
 	if current_gear == 0:
 		return 0.0
 		
@@ -53,20 +63,23 @@ func calculate_rpm():
 	elif current_gear <= gear_ratios.size():
 		return drive_shaft_rotation_speed * gear_ratios[current_gear -1]
 	else:
-		return 0
+		return 0.0
 
 
 func _ready():
 	pass
 	
 	
-func _process(delta):
-	_process_gear_inputs()
-	var rpm = calculate_rpm()	
+func _process(delta : float):
+	_process_gear_inputs(delta)
+	var rpm = calculate_rpm()
+	var speed = get_speed_kph()
+	print('Speed: %.0f, RPM: %.0f (gear: %d)'  % [ speed, rpm, current_gear ])
 	print(rpm)
 
 
 func _physics_process(delta):
+	current_speed_mps = (translation - last_pos).length() / delta
 	var steer_val = steering_mult * Input.get_joy_axis(0, joy_steering)
 	var throttle_val = throttle_mult * Input.get_joy_axis(0, joy_throttle)
 	var brake_val = brake_mult * Input.get_joy_axis(0, joy_brake)
@@ -87,9 +100,10 @@ func _physics_process(delta):
 	
 	
 	if current_gear == -1:
-		engine_force = throttle_val * power_factor * reverse_ratio * final_drive_ratio * MAX_ENGINE_FORCE
+		engine_force = clutch_position * throttle_val * power_factor * reverse_ratio * final_drive_ratio * MAX_ENGINE_FORCE
 	elif current_gear > 0 and current_gear <= gear_ratios.size():
-		engine_force = throttle_val * power_factor * gear_ratios[current_gear - 1] * reverse_ratio * final_drive_ratio * MAX_ENGINE_FORCE
+		print("mogus ", throttle_val * power_factor * gear_ratios[current_gear - 1] * reverse_ratio * final_drive_ratio * MAX_ENGINE_FORCE)
+		engine_force = clutch_position * throttle_val * power_factor * gear_ratios[current_gear - 1] * reverse_ratio * final_drive_ratio * MAX_ENGINE_FORCE
 	else:
 		engine_force = 0.0
 	
@@ -107,3 +121,4 @@ func _physics_process(delta):
 			steer_angle = steer_target
 	
 	steering = steer_angle
+	last_pos = translation
