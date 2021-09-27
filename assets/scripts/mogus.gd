@@ -95,6 +95,9 @@ func _process(delta : float):
 	var rpm = calculate_rpm()
 	
 	var info = 'Speed: %.0f, RPM: %.0f (gear: %d)'  % [ speed, rpm, current_gear ]
+	$carUi/rpmMeter.value = rpm
+	$carUi/gasPedal.value = throttle_mult * Input.get_joy_axis(0, joy_throttle)
+	$carUi/gear.text = str(current_gear)
 	
 	#$Info.text = info
 
